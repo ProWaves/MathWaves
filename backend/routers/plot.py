@@ -19,6 +19,15 @@ def plot(req: PlotRequest):
     if kind == "auto":
         kind = detect_type(expr)
 
+    # Gracefully skip unsupported kinds (multi-var, constants)
+    if kind in ("multi", "constant", "unknown"):
+        raise HTTPException(
+            400,
+            f"Cannot plot this formula automatically (detected: {kind}). "
+            f"It has too many variables or is a constant. "
+            f"Try specifying values for the variables, or use a 1-variable formula.",
+        )
+
     try:
         if kind == "2d":
             fig = make_2d_plot(expr, (req.x_min, req.x_max))
