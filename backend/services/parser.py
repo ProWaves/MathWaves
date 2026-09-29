@@ -1,10 +1,12 @@
+
+import re
 """Parse LaTeX / plain math into SymPy expressions."""
 import sympy as sp
 from sympy.parsing.latex import parse_latex
 
 
 def parse_formula(raw: str):
-    """Return (sympy_expr, error_message)."""
+    """Return (sympy_expr, error_message). More tolerant of natural input."""
     if not raw or not raw.strip():
         return None, "Empty input."
 
@@ -16,6 +18,16 @@ def parse_formula(raw: str):
             cleaned = cleaned[len(prefix):].strip()
             break
 
+    # Auto-insert parentheses for function calls like "sin x" -> "sin(x)"
+    cleaned = re.sub(r"\b(sin|cos|tan|log|exp|sqrt)\s+([a-zA-Z0-9_]+)",
+                     r"\1(\2)", cleaned)
+    # Handle "sin x / x" -> "sin(x) / x"
+    cleaned = re.sub(r"\b(sin|cos|tan|log|exp|sqrt)\s+([a-zA-Z0-9_]+)\b",
+                     r"\1(\2)", cleaned)
+
+    # Strip trailing period
+    cleaned = cleaned.rstrip(".")
+
     # Try LaTeX first
     try:
         expr = parse_latex(cleaned)
@@ -24,7 +36,7 @@ def parse_formula(raw: str):
     except Exception:
         pass
 
-    # Fallback: sympify
+    # Fallback: sympify with lots of aliases
     try:
         x, y, z, t, theta = sp.symbols("x y z t theta")
         expr = sp.sympify(
@@ -38,7 +50,18 @@ def parse_formula(raw: str):
         )
         return expr, None
     except Exception as e:
-        return None, f"Could not parse formula: {e}"
+        # Last attempt: sanitize harder and retry
+        try:
+            sanitized = re.sub(r"[^a-zA-Z0-9+\-*/^().,=\s]", "", cleaned)
+            sanitized = re.sub(r"\s+", "", sanitized)
+            expr = sp.sympify(
+                sanitized.replace("^", "**"),
+                locals={"x": x, "y": y, "z": z, "t": t, "theta": theta,
+                        "sin": sp.sin, "cos": sp.cos, "tan": sp.tan},
+            )
+            return expr, None
+        except Exception:
+            return None, f"Could not parse formula. Try a simpler form like 'x^2 + 3x'."
 
 
 def detect_variables(expr):

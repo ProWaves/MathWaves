@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import translate, plot
+from routers import translate, plot, voice
 
 app = FastAPI(
     title="MathWaves API",
@@ -22,6 +22,7 @@ app.add_middleware(
 
 app.include_router(translate.router)
 app.include_router(plot.router)
+app.include_router(voice.router)
 
 
 @app.get("/")
@@ -31,10 +32,11 @@ def root():
         "status": "ok",
         "docs": "/docs",
         "endpoints": [
-            "POST /api/translate",
-            "POST /api/plot",
-            "POST /api/explain",
-        ],
+    "POST /api/translate",
+    "POST /api/plot",
+    "POST /api/explain",
+    "POST /api/transcribe",
+],
     }
 
 
