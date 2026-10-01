@@ -1,24 +1,11 @@
-# Web framework
 fastapi==0.115.0
 uvicorn[standard]==0.32.0
 python-multipart==0.0.12
-
-# Data validation
 pydantic==2.9.2
-
-# Environment
 python-dotenv==1.0.1
-
-# LLM providers
 groq==0.13.1
 google-generativeai==0.8.3
-
-# Image handling (for OCR)
 pillow==10.4.0
-
-# Math engine
 sympy==1.13.3
 numpy==1.26.4
-
-# Plotting
 plotly==5.24.1
